@@ -1,51 +1,58 @@
-import React, { Component } from 'react';
-import './App.css';
-import AppStyled from './AppStyled';
-import Character from './Character';
-import CharDetails from './CharDetails';
+import React, { Component } from "react";
+import "./App.css";
+import AppStyled from "./AppStyled";
+import Character from "./Character";
+import CharHighlight from "./CharHighlight";
+import { BrowserRouter as Router, Route } from "react-router-dom";
 
 class App extends Component {
-  constructor() {
-    super();
-    this.state = {
-      starwarsChars: []
-    };
-  }
+  state = {
+    starwarsChars: []
+  };
+
   componentDidMount() {
-    // feel free to research what this code is doing.
-    // At a high level we are calling an API to fetch some starwars data from the open web.
-    // We then take that data and resolve it our state.
-    fetch('https://swapi.co/api/people')
+    fetch("https://swapi.co/api/people")
       .then(res => {
         return res.json();
       })
       .then(data => {
-        this.setState({ starwarsChars: data.results });
+        const pattern = /https:\/\/swapi.co\/api\/people\/(.*?)\//;
+        const starwarsChars = data.results.map(char => ({
+          id: char.url.match(pattern)[1],
+          ...char
+        }));
+        this.setState({ starwarsChars });
       })
       .catch(err => {
         throw new Error(err);
       });
+    console.log("App Component Mount", this.state);
   }
 
   render() {
     return (
+      <Router>
+        <div>
+          <Route path="/" component={this.Main} exact />
+          <Route path="/character/:id" component={CharHighlight} />
+        </div>
+      </Router>
+    );
+  }
+
+  Main = () => {
+    return (
       <AppStyled>
-        <div className='Header'></div>
-        <div className='character'>
-          {
-            this.state.starwarsChars.map(character => {
-              return <Character character={character} />
-            })
-          }
-          <ul className="char-grid">
-            {this.state.starwarsChars.map((char) => {
-              return <CharDetails char={char} />;
-            })}
-          </ul>
+        <div className="Header" />
+        <div className="character">
+          {console.log("Main runs state", this.state)}
+          {this.state.starwarsChars.map(character => {
+            return <Character key={character.id} character={character} />;
+          })}
         </div>
       </AppStyled>
     );
-  }
+  };
 }
 
 export default App;
